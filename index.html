@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Chat</title>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="https://unpkg.com/98.css">
+<style>
+    body {
+        display: flex;
+        flex-direction: column;
+        height: 100vh; /* 让 body 铺满整个视窗 */
+        margin: 0; /* 清除默认的 body 边距 */
+    }
+
+    .chat-container {
+        flex: 1; /* 填充剩余空间 */
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+    }
+
+    .chat-box {
+        flex: 1; /* 聊天框占据剩余空间 */
+        overflow-y: auto; /* 当内容溢出时显示滚动条 */
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin-bottom: 20px;
+    }
+
+    .chat-form {
+        display: flex;
+        margin-top: auto; /* 将表单置于底部 */
+    }
+
+    .chat-form input[type="text"],
+    .chat-form button {
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    /* 将姓名输入框宽度设置为更小 */
+    .chat-form input[type="text"]#name {
+        width: 120px;
+    }
+
+    .chat-form input[type="text"]#message {
+        flex: 1; /* 消息输入框扩展填满可用空间 */
+        margin-right: 10px;
+    }
+
+    .chat-form button {
+        background-color: #007bff;
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .chat-form button:hover {
+        background-color: #0056b3;
+    }
+
+    /* 用户名与输入用户名相同时，输入框变为绿色 */
+    .chat-form input[type="text"]#name.green {
+        border-color: #28a745; /* 绿色边框 */
+    }
+</style>
+</head>
+<body>
+<div class="chat-container">
+    <div class="chat-box" id="chat-box"></div>
+    <form id="chat-form" class="chat-form" action="sendMessage.php" method="post">
+        <input type="text" id="name" name="name" placeholder="Your name" required>
+        <input type="text" id="message" name="message" placeholder="Write messages..." required>
+        <button type="submit">Send</button>
+    </form>
+</div>
+
+<script>
+    // 获取表单和输入框
+    const form = document.getElementById('chat-form');
+    const nameInput = document.getElementById('name');
+
+    // 监听用户名输入框变化
+    nameInput.addEventListener('input', function() {
+        if (nameInput.value.trim() === '') {
+            nameInput.classList.remove('green'); // 如果输入框为空，移除绿色样式
+        } else if (nameInput.value.trim() === nameInput.defaultValue.trim()) {
+            nameInput.classList.add('green'); // 如果输入框值与默认值相同，添加绿色样式
+        } else {
+            nameInput.classList.remove('green'); // 否则移除绿色样式
+        }
+    });
+
+    // 提交表单时
+    form.addEventListener('submit', function(event) {
+        event.preventDefault(); // 阻止默认提交行为
+
+        // 发送消息
+        fetch('sendMessage.php', {
+            method: 'POST',
+            body: new FormData(form)
+        })
+        .then(response => response.text())
+        .then(data => {
+            // 清空消息输入框
+            document.getElementById('message').value = '';
+            // 刷新聊天消息
+            refreshChatMessages();
+        });
+    });
+
+    // 自动刷新聊天消息
+    function refreshChatMessages() {
+        fetch('getMessages.php')
+            .then(response => response.text())
+            .then(data => {
+                document.getElementById('chat-box').innerHTML = data;
+                // 滚动到最新消息处
+                document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
+            });
+    }
+
+    // 页面加载时执行一次刷新聊天消息
+    refreshChatMessages();
+</script>
+
+</body>
+</html>
